@@ -6,7 +6,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +16,6 @@ import java.util.concurrent.TimeUnit;
  * Created by patterncat on 2016/4/6.
  */
 @ChannelHandler.Sharable
-@Component
 public class ClientRpcHandler extends SimpleChannelInboundHandler<RpcResponse> {
 
     //用blocking queue主要是用阻塞的功能，省的自己加锁

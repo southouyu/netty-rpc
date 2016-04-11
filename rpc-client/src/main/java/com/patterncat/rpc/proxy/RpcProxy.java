@@ -15,16 +15,16 @@ import java.util.concurrent.TimeUnit;
  * 使之像本地调用一样
  * Created by patterncat on 2016/4/8.
  */
-public class RemoteServiceProxy implements InvocationHandler {
+public class RpcProxy implements InvocationHandler {
 
     private NettyClient nettyClient;
 
     private Pair<Long,TimeUnit> timeout;
 
-    public RemoteServiceProxy() {
+    public RpcProxy() {
     }
 
-    public RemoteServiceProxy(NettyClient nettyClient, Pair<Long, TimeUnit> timeout) {
+    public RpcProxy(NettyClient nettyClient, Pair<Long, TimeUnit> timeout) {
         this.nettyClient = nettyClient;
         this.timeout = timeout;
     }
