@@ -5,10 +5,7 @@ import com.patterncat.rpc.common.codec.RpcEncoder;
 import com.patterncat.rpc.common.dto.RpcRequest;
 import com.patterncat.rpc.common.dto.RpcResponse;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -23,26 +20,29 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * https://github.com/dozer47528/AutoReconnectNettyExample/blob/master/src/main/java/cc/dozer/netty/example/TcpClient.java
+ */
 public class NettyClient implements IClient {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyClient.class);
 
     private EventLoopGroup workerGroup;
+    private Bootstrap bootstrap;
     private Channel channel;
 
     private ClientRpcHandler clientRpcHandler = new ClientRpcHandler();
 
-    private volatile boolean connected = false;
+    private volatile boolean closed = false;
 
 //    @Value("${client.workerGroupThreads:5}")
     int workerGroupThreads = 5;
 
-    public void connect(InetSocketAddress socketAddress) {
+    public void connect(final InetSocketAddress socketAddress) {
         try{
             workerGroup = new NioEventLoopGroup(workerGroupThreads);
-            Bootstrap bootstrap = new Bootstrap();
-            bootstrap
-                    .group(workerGroup)
+            bootstrap = new Bootstrap();
+            bootstrap.group(workerGroup)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.SO_KEEPALIVE, true)
                     .option(ChannelOption.TCP_NODELAY, true)
@@ -50,6 +50,19 @@ public class NettyClient implements IClient {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline()
+                                    //处理失败重连
+                                    .addFirst(new ChannelInboundHandlerAdapter() {
+                                        @Override
+                                        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                            super.channelInactive(ctx);
+                                            ctx.channel().eventLoop().schedule(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    doConnect(socketAddress);
+                                                }
+                                            },1, TimeUnit.SECONDS);
+                                        }
+                                    })
                                     //处理分包传输问题
                                     .addLast("decoder", new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4))
                                     .addLast("encoder", new LengthFieldPrepender(4, false))
@@ -58,27 +71,37 @@ public class NettyClient implements IClient {
                                     .addLast(clientRpcHandler);
                         }
                     });
-            channel = bootstrap.connect(socketAddress.getAddress().getHostAddress(), socketAddress.getPort())
-                    .syncUninterruptibly()
-                    .channel();
-            connected = true;
+            doConnect(socketAddress);
         }catch (Exception e){
-            logger.error(e.getMessage(),e);
-            connected = false;
-            reconnect(1,TimeUnit.SECONDS,socketAddress);
+            logger.error(e.getMessage(), e);
         }
     }
 
-    public void reconnect(int delay,TimeUnit timeUnit,InetSocketAddress socketAddress){
-        try {
-            timeUnit.sleep(delay);
-            if(connected){
-                return ;
-            }
-            connect(socketAddress);
-        } catch (InterruptedException e) {
-            logger.error(e.getMessage(),e);
+    private void doConnect(final InetSocketAddress socketAddress) {
+        logger.info("trying to connect server:{}",socketAddress);
+        if (closed) {
+            return;
         }
+
+        ChannelFuture future = bootstrap.connect(socketAddress);
+        future.addListener(new ChannelFutureListener() {
+            public void operationComplete(ChannelFuture f) throws Exception {
+                if (f.isSuccess()) {
+                    logger.info("connected to {}", socketAddress);
+                } else {
+                    logger.info("connected to {} failed",socketAddress);
+                    f.channel().eventLoop().schedule(new Runnable() {
+                        @Override
+                        public void run() {
+                            doConnect(socketAddress);
+                        }
+                    }, 1, TimeUnit.SECONDS);
+                }
+            }
+        });
+
+        channel = future.syncUninterruptibly()
+                .channel();
     }
 
     public RpcResponse syncSend(RpcRequest request) throws InterruptedException {
@@ -100,8 +123,8 @@ public class NettyClient implements IClient {
         return (InetSocketAddress) remoteAddress;
     }
 
-    public boolean isConnected() {
-        return connected;
+    public boolean isClosed() {
+        return closed;
     }
 
     @PreDestroy
@@ -110,7 +133,7 @@ public class NettyClient implements IClient {
         if (null == channel) {
             logger.error("channel is null");
         }
-        connected = false;
+        closed = true;
         workerGroup.shutdownGracefully();
         channel.closeFuture().syncUninterruptibly();
         workerGroup = null;

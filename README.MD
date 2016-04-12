@@ -14,6 +14,8 @@
 - [hessian-spring](https://github.com/mingpeng2live/hessian-spring)
 - [rpc-spring](https://github.com/lindzh/rpc-spring)
 - [rsf](http://git.oschina.net/zycgit/rsf)
+- [netty重连实例](https://github.com/gsrpc/jvmrpc.git)
+- [AutoReconnectNettyExample](https://github.com/dozer47528/AutoReconnectNettyExample/blob/master/src/main/java/cc/dozer/netty/example/TcpClient.java)
 
 ##client端调用remote service的方式
 - java config方式

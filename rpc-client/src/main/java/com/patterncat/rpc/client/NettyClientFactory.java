@@ -12,7 +12,7 @@ public class NettyClientFactory {
 
     public static NettyClient get(Class<?> targetInterface){
         NettyClient client = serviceClientMap.get(targetInterface);
-        if(client != null && client.isConnected()){
+        if(client != null && !client.isClosed()){
             return client;
         }
         //connect
