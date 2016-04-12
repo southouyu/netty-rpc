@@ -38,6 +38,9 @@
 这种方式就是配置感觉略微复杂点，不过还可以接受，具体可参照[navi](https://github.com/neoremind/navi)
 
 - 更简洁的xml
+```xml
+<dubbo:reference id="helloService" interface="com.patterncat.rpc.service.demo.HelloService" timeout="200"/>
+```
 参照dubbo的方式，自定义schema，[dubbo-config-spring](https://github.com/alibaba/dubbo/tree/master/dubbo-config/dubbo-config-spring)
 
 - client再次定义接口
