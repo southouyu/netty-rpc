@@ -12,6 +12,36 @@
 - [Dubbo之旅--启动解析](http://blog.csdn.net/jnqqls/article/details/45371785)(`DubboBeanDefinitionParser#parse`)
 - [spring hessian 自动扫描注入](http://www.thinksaas.cn/group/topic/352814/)
 - [hessian-spring](https://github.com/mingpeng2live/hessian-spring)
+- [rpc-spring](https://github.com/lindzh/rpc-spring)
+
+##client端调用remote service的方式
+- java config方式
+```java
+@Bean
+    public HelloService buildHelloService(RpcProxyFactory rpcProxyFactory){
+        return rpcProxyFactory.proxyBean(HelloService.class,100/*timeout*/);
+    }
+```
+好处是，可以直接共用service-api的接口，不好的是java config稍微不如xml直观，不过适应就好
+
+- xml方式
+```xml
+<bean id="helloService" class="com.patterncat.rpc.spring.SpringProxyFactoryBean">
+		<property name="innerClassName">
+			<value>com.patterncat.rpc.service.demo.HelloService</value>
+		</property>
+		<property name="timeoutInMillis">
+			<value>200</value>
+		</property>
+	</bean>
+```
+这种方式就是配置感觉略微复杂点，不过还可以接受，具体可参照[navi](https://github.com/neoremind/navi)
+
+- 更简洁的xml
+参照dubbo的方式，自定义schema，[dubbo-config-spring](https://github.com/alibaba/dubbo/tree/master/dubbo-config/dubbo-config-spring)
+
+- client再次定义接口
+使用scanner的方式，client端再次写接口，然后client端扫描装配，重复定义，不建议用，具体可参照[rpc-spring](https://github.com/lindzh/rpc-spring/tree/master/src/main/java/com/linda/framework/rpc/spring/invoker)
 
 ##todo
 - client的失败重连

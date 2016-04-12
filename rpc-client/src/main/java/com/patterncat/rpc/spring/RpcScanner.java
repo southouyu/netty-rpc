@@ -11,6 +11,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import java.util.Set;
 
 /**
+ * https://github.com/lindzh/rpc-spring/tree/master/src/main/java/com/linda/framework/rpc/spring/invoker
  * Created by patterncat on 2016-04-11.
  */
 public class RpcScanner extends ClassPathBeanDefinitionScanner {

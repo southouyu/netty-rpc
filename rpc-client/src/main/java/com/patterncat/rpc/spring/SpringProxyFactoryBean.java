@@ -14,6 +14,8 @@ public class SpringProxyFactoryBean<T> implements InitializingBean, FactoryBean<
 
     private String innerClassName;
 
+    private int timeoutInMillis;
+
     public void setInnerClassName(String innerClassName) {
         this.innerClassName = innerClassName;
     }
