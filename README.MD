@@ -13,6 +13,7 @@
 - [spring hessian 自动扫描注入](http://www.thinksaas.cn/group/topic/352814/)
 - [hessian-spring](https://github.com/mingpeng2live/hessian-spring)
 - [rpc-spring](https://github.com/lindzh/rpc-spring)
+- [rsf](http://git.oschina.net/zycgit/rsf)
 
 ##client端调用remote service的方式
 - java config方式
