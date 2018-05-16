@@ -43,11 +43,15 @@ public class RpcProxy implements InvocationHandler {
         }else{
             response = nettyClient.asyncSend(request,timeout);
         }
-
-        if (response.isError()) {
-            throw response.getError();
-        } else {
-            return response.getResult();
+        if(response!=null){
+            if (response.isError()) {
+                throw response.getError();
+            } else {
+                return response.getResult();
+            }
+        }else{
+           return null;
         }
+
     }
 }

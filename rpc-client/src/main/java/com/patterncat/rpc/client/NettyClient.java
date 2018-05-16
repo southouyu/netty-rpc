@@ -31,6 +31,7 @@ public class NettyClient implements IClient {
     private Bootstrap bootstrap;
     private Channel channel;
 
+
     private ClientRpcHandler clientRpcHandler = new ClientRpcHandler();
 
     private volatile boolean closed = false;
@@ -60,7 +61,7 @@ public class NettyClient implements IClient {
                                                 public void run() {
                                                     doConnect(socketAddress);
                                                 }
-                                            },1, TimeUnit.SECONDS);
+                                            },3, TimeUnit.SECONDS);
                                         }
                                     })
                                     //处理分包传输问题
@@ -104,6 +105,7 @@ public class NettyClient implements IClient {
                 .channel();
     }
 
+    
     public RpcResponse syncSend(RpcRequest request) throws InterruptedException {
         System.out.println("send request:"+request);
         channel.writeAndFlush(request).sync();
@@ -111,8 +113,13 @@ public class NettyClient implements IClient {
     }
 
     public RpcResponse asyncSend(RpcRequest request,Pair<Long,TimeUnit> timeout) throws InterruptedException {
-        channel.writeAndFlush(request);
-        return clientRpcHandler.send(request,timeout);
+        if(channel!=null){
+            channel.writeAndFlush(request);
+            return clientRpcHandler.send(request,timeout);
+        }
+        else{
+            return  null;
+        }
     }
 
     public InetSocketAddress getRemoteAddress() {
